@@ -1,0 +1,2 @@
+-- SmoothTravel initial schema
+-- This migration validates that Flyway is correctly configured.

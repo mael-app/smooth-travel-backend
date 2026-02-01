@@ -10,11 +10,19 @@ Open-source multimodal travel planning API built with Quarkus and Java 21. Combi
 
 ## Quick start
 
+Start the dev dependencies (PostgreSQL + Redis):
+
+```bash
+docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
+```
+
+Then run the API in dev mode:
+
 ```bash
 ./mvnw quarkus:dev
 ```
 
-The API is available at `http://localhost:8080`. A health endpoint is exposed at `GET /health`.
+The API is available at `http://localhost:8080`. A health endpoint is exposed at `GET /api/v1/health` and the Swagger UI at `/docs`.
 
 ## Build
 

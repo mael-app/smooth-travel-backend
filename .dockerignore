@@ -1,0 +1,10 @@
+target/
+.git/
+.github/
+.idea/
+.quarkus/
+.vscode/
+*.md
+*.pdf
+LICENSE
+.env

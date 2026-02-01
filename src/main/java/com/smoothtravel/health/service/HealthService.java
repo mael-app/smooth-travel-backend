@@ -1,5 +1,6 @@
-package com.smoothtravel.health;
+package com.smoothtravel.health.service;
 
+import com.smoothtravel.health.dto.HealthResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped

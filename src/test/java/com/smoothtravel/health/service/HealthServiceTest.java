@@ -1,5 +1,6 @@
-package com.smoothtravel.health;
+package com.smoothtravel.health.service;
 
+import com.smoothtravel.health.dto.HealthResponse;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;

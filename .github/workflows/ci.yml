@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   build:
@@ -22,3 +22,17 @@ jobs:
 
       - name: Build and test
         run: ./mvnw verify --no-transfer-progress
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+
+      - name: Add coverage summary to job
+        if: always()
+        run: |
+          if [ -f target/site/jacoco/index.html ]; then
+            awk -F',' 'NR==2 {printf "### Coverage: %d%%\n", ($4+$5)==0?0:$5*100/($4+$5)}' target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
+          fi

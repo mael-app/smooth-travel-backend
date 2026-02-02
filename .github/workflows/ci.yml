@@ -34,5 +34,5 @@ jobs:
         if: always()
         run: |
           if [ -f target/site/jacoco/index.html ]; then
-            awk -F',' 'NR==2 {printf "### Coverage: %d%%\n", ($4+$5)==0?0:$5*100/($4+$5)}' target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
+            awk -F',' 'NR>1 {missed+=$4; covered+=$5} END {printf "### Coverage: %d%%\n", (missed+covered)==0?0:covered*100/(missed+covered)}' target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
           fi

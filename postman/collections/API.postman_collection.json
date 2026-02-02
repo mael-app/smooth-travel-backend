@@ -1,0 +1,286 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+    "name": "Smooth Travel API",
+    "description": "Collection for the Smooth Travel backend API — REST & GraphQL.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Check service health",
+          "id": "3d7025f7-0cd0-478b-b14a-c9e59677fc52",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health"
+              ]
+            },
+            "description": "Returns the current status of the API."
+          },
+          "response": []
+        }
+      ],
+      "id": "8065513d-2a14-42e7-b3d8-7591f9522139",
+      "description": "Service health and readiness checks."
+    },
+    {
+      "name": "Users — REST",
+      "item": [
+        {
+          "name": "Create a new user",
+          "id": "4c428548-2dfe-48cc-a065-16bfd9649621",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"email\": \"user@example2.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            },
+            "description": "Registers a new user with the given email (passwordless)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get user by ID",
+          "id": "d9af6cef-f8ce-46e7-a3d3-fb95fc83e8ce",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "ab06dd6d-ab41-459a-94fa-51d247d22d03",
+                  "description": "User UUID"
+                }
+              ]
+            },
+            "description": "Returns a user by their unique identifier."
+          },
+          "response": []
+        }
+      ],
+      "id": "e472e36f-cc49-41e1-9772-b4dfed581f26",
+      "description": "REST endpoints for user management (`/api/v1/users`)."
+    },
+    {
+      "name": "Users — GraphQL",
+      "item": [
+        {
+          "name": "Query — userById",
+          "id": "b1a2c3d4-1111-4aaa-bbbb-000000000001",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Fetches a single user by UUID. Returns null if not found."
+          },
+          "response": []
+        },
+        {
+          "name": "Query — userByEmail",
+          "id": "b1a2c3d4-1111-4aaa-bbbb-000000000002",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Fetches a single user by email address. Returns null if not found."
+          },
+          "response": []
+        },
+        {
+          "name": "Mutation — createUser",
+          "id": "b1a2c3d4-1111-4aaa-bbbb-000000000003",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Creates a new user. Returns 409-equivalent error if the email already exists."
+          },
+          "response": []
+        }
+      ],
+      "id": "f5a6b7c8-2222-4bbb-cccc-000000000001",
+      "description": "GraphQL operations for user management (`/graphql`). Use the GraphiQL UI in dev mode at `/q/graphql-ui`."
+    },
+    {
+      "name": "Query — userById",
+      "id": "b1a2c3d4-1111-4aaa-bbbb-000000000001",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "graphql"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "graphql"
+          ]
+        },
+        "description": "Fetches a single user by UUID. Returns null if not found."
+      },
+      "response": []
+    },
+    {
+      "name": "Query — userByEmail",
+      "id": "b1a2c3d4-1111-4aaa-bbbb-000000000002",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "graphql"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "graphql"
+          ]
+        },
+        "description": "Fetches a single user by email address. Returns null if not found."
+      },
+      "response": []
+    },
+    {
+      "name": "Mutation — createUser",
+      "id": "b1a2c3d4-1111-4aaa-bbbb-000000000003",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "graphql"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "graphql"
+          ]
+        },
+        "description": "Creates a new user. Returns 409-equivalent error if the email already exists."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "id": "0844dfc5-d1c2-4a2f-83b2-c268a8532d79",
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

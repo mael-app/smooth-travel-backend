@@ -1,5 +1,8 @@
 # SmoothTravel Backend
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mael-app_smooth-travel-backend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=mael-app_smooth-travel-backend)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=mael-app_smooth-travel-backend&metric=coverage)](https://sonarcloud.io/summary/new_code?id=mael-app_smooth-travel-backend)
+
 Open-source multimodal travel planning API built with Quarkus and Java 21. Combines SNCF and urban transport networks to compute optimized itineraries.
 
 ## Prerequisites

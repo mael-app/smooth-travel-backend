@@ -10,6 +10,12 @@ Open-source multimodal travel planning API built with Quarkus and Java 21. Combi
 
 ## Quick start
 
+Copy the environment file and adjust values if needed:
+
+```bash
+cp .env.dev.example .env.dev
+```
+
 Start the dev dependencies (PostgreSQL + Redis):
 
 ```bash

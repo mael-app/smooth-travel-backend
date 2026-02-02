@@ -23,5 +23,10 @@ class HealthServiceTest {
         assertNotNull(response.components());
         assertTrue(response.components().containsKey("database"));
         assertEquals("UP", response.components().get("database").status());
+        assertEquals("PostgreSQL connected", response.components().get("database").details());
+
+        assertTrue(response.components().containsKey("redis"));
+        assertEquals("UP", response.components().get("redis").status());
+        assertEquals("Redis connected", response.components().get("redis").details());
     }
 }

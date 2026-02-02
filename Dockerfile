@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.23 AS build
+FROM registry.access.redhat.com/ubi9/openjdk-21:1.24 AS build
 
 USER root
 WORKDIR /build
@@ -12,7 +12,7 @@ RUN ./mvnw dependency:go-offline -q
 COPY src src
 RUN ./mvnw package -DskipTests -q
 
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.23
+FROM registry.access.redhat.com/ubi9/openjdk-21:1.24
 
 ENV LANGUAGE='en_US:en'
 

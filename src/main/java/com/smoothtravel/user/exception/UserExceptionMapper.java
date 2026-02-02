@@ -63,4 +63,15 @@ public class UserExceptionMapper {
                     .build();
         }
     }
+
+    @Provider
+    public static class UserNotVerifiedMapper implements jakarta.ws.rs.ext.ExceptionMapper<UserNotVerifiedException> {
+        @Override
+        public Response toResponse(UserNotVerifiedException e) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
+    }
 }

@@ -30,12 +30,7 @@ public class VerificationCodeService {
         String code = generateCode();
         String value = code + ":" + Instant.now().toEpochMilli();
         redisService.set(KEY_PREFIX + email, value, CODE_TTL);
-        try {
-            sendVerificationEmail(email, code);
-        } catch (Exception e) {
-            redisService.delete(KEY_PREFIX + email);
-            throw e;
-        }
+        sendVerificationEmail(email, code);
     }
 
     public boolean hasPendingCode(String email) {
@@ -49,6 +44,10 @@ public class VerificationCodeService {
         }
         long createdAt = Long.parseLong(value.split(":")[1]);
         return Instant.now().isAfter(Instant.ofEpochMilli(createdAt).plus(RESEND_COOLDOWN));
+    }
+
+    public void deleteCode(String email) {
+        redisService.delete(KEY_PREFIX + email);
     }
 
     public boolean verify(String email, String code) {

@@ -7,6 +7,7 @@ import com.smoothtravel.user.exception.AlreadyVerifiedException;
 import com.smoothtravel.user.exception.InvalidVerificationCodeException;
 import com.smoothtravel.user.exception.ResendCooldownException;
 import com.smoothtravel.user.exception.UserNotFoundException;
+import com.smoothtravel.user.exception.UserNotVerifiedException;
 import com.smoothtravel.user.exception.VerificationPendingException;
 import com.smoothtravel.user.repository.UserRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -52,12 +53,8 @@ public class UserService {
     }
 
     public void resendVerificationCode(String email) {
-        User user = userRepository.findByEmail(email)
+        userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
-
-        if (user.verified) {
-            throw new AlreadyVerifiedException(email);
-        }
 
         if (!verificationCodeService.canResend(email)) {
             throw new ResendCooldownException();
@@ -87,6 +84,41 @@ public class UserService {
 
     public Optional<UserResponse> getUserById(UUID id) {
         return userRepository.findByIdOptional(id).map(this::toResponse);
+    }
+
+    public void loginUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
+
+        if (!user.verified) {
+            throw new UserNotVerifiedException(email);
+        }
+
+        verificationCodeService.generateAndSend(email);
+    }
+
+    public UserResponse verifyLogin(String email, String code) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
+
+        if (!user.verified) {
+            throw new UserNotVerifiedException(email);
+        }
+
+        if (!verificationCodeService.verify(email, code)) {
+            throw new InvalidVerificationCodeException();
+        }
+
+        return toResponse(user);
+    }
+
+    @Transactional
+    public void deleteUser(UUID userId) {
+        User user = userRepository.findByIdOptional(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
+
+        verificationCodeService.deleteCode(user.email);
+        userRepository.delete(user);
     }
 
     public Optional<UserResponse> getUserByEmail(String email) {

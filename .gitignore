@@ -41,6 +41,10 @@ nb-configuration.xml
 .env.*
 !.env.example
 
+# JWT Keys
+src/main/resources/privateKey.pem
+src/main/resources/publicKey.pem
+
 # Quarkus
 .quarkus/
 # TLS Certificates

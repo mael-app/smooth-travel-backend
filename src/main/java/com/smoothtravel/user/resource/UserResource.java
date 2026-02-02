@@ -1,7 +1,9 @@
 package com.smoothtravel.user.resource;
 
 import com.smoothtravel.user.dto.CreateUserRequest;
+import com.smoothtravel.user.dto.ResendCodeRequest;
 import com.smoothtravel.user.dto.UserResponse;
+import com.smoothtravel.user.dto.VerifyCodeRequest;
 import com.smoothtravel.user.service.UserService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -18,6 +20,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.UUID;
 
 @Path("/api/v1/users")
@@ -30,12 +33,34 @@ public class UserResource {
     UserService userService;
 
     @POST
-    @Operation(summary = "Create a new user", description = "Registers a new user with the given email (passwordless)")
-    @APIResponse(responseCode = "201", description = "User created successfully")
-    @APIResponse(responseCode = "409", description = "Email already exists")
+    @Operation(summary = "Create a new user", description = "Registers a new user and sends a verification code by email")
+    @APIResponse(responseCode = "201", description = "User created, verification code sent")
+    @APIResponse(responseCode = "409", description = "Email already verified or verification pending")
     public Response createUser(@Valid CreateUserRequest request) {
         UserResponse user = userService.createUser(request);
-        return Response.created(URI.create("/api/v1/users/" + user.id())).entity(user).build();
+        return Response.created(URI.create("/api/v1/users/" + user.id()))
+                .entity(Map.of("message", "Verification code sent to " + request.email(), "user", user))
+                .build();
+    }
+
+    @POST
+    @Path("/resend-code")
+    @Operation(summary = "Resend verification code", description = "Resends a verification code (30s cooldown)")
+    @APIResponse(responseCode = "200", description = "Verification code resent")
+    @APIResponse(responseCode = "429", description = "Must wait before resending")
+    public Response resendCode(@Valid ResendCodeRequest request) {
+        userService.resendVerificationCode(request.email());
+        return Response.ok(Map.of("message", "Verification code sent to " + request.email())).build();
+    }
+
+    @POST
+    @Path("/verify")
+    @Operation(summary = "Verify email", description = "Verifies a user email with the 6-character code")
+    @APIResponse(responseCode = "200", description = "Email verified successfully")
+    @APIResponse(responseCode = "400", description = "Invalid or expired code")
+    public Response verifyEmail(@Valid VerifyCodeRequest request) {
+        UserResponse user = userService.verifyUser(request.email(), request.code());
+        return Response.ok(Map.of("message", "Email verified successfully", "user", user)).build();
     }
 
     @GET

@@ -31,4 +31,15 @@ public class UserGraphQLResource {
     public UserResponse createUser(CreateUserRequest request) {
         return userService.createUser(request);
     }
+
+    @Mutation("resendVerificationCode")
+    public boolean resendVerificationCode(@Name("email") String email) {
+        userService.resendVerificationCode(email);
+        return true;
+    }
+
+    @Mutation("verifyEmail")
+    public UserResponse verifyEmail(@Name("email") String email, @Name("code") String code) {
+        return userService.verifyUser(email, code);
+    }
 }

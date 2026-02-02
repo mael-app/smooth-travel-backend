@@ -13,13 +13,13 @@ Open-source multimodal travel planning API built with Quarkus and Java 21. Combi
 Copy the environment file and adjust values if needed:
 
 ```bash
-cp .env.dev.example .env.dev
+cp .env.example .env
 ```
 
 Start the dev dependencies (PostgreSQL + Redis):
 
 ```bash
-docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
+docker compose -f docker-compose.dev.yml --env-file .env up -d
 ```
 
 Then run the API in dev mode:

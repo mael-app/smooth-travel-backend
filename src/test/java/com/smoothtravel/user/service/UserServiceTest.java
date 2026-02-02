@@ -3,7 +3,8 @@ package com.smoothtravel.user.service;
 import com.smoothtravel.user.dto.CreateUserRequest;
 import com.smoothtravel.user.dto.UserResponse;
 import com.smoothtravel.user.entity.User;
-import com.smoothtravel.user.exception.EmailAlreadyExistsException;
+import com.smoothtravel.user.exception.AlreadyVerifiedException;
+import com.smoothtravel.user.exception.VerificationPendingException;
 import com.smoothtravel.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -32,6 +35,9 @@ class UserServiceTest {
 
     @Mock
     UserRepository userRepository;
+
+    @Mock
+    VerificationCodeService verificationCodeService;
 
     @InjectMocks
     UserService userService;
@@ -52,6 +58,7 @@ class UserServiceTest {
     void shouldCreateUser() {
         CreateUserRequest request = new CreateUserRequest("new@example.com");
         when(userRepository.findByEmail("new@example.com")).thenReturn(Optional.empty());
+        doNothing().when(verificationCodeService).generateAndSend(anyString());
         doAnswer(invocation -> {
             User user = invocation.getArgument(0);
             user.id = UUID.randomUUID();
@@ -66,14 +73,39 @@ class UserServiceTest {
         assertEquals("new@example.com", response.email());
         assertFalse(response.verified());
         verify(userRepository).persist(any(User.class));
+        verify(verificationCodeService).generateAndSend("new@example.com");
     }
 
     @Test
-    void shouldThrowWhenEmailAlreadyExists() {
+    void shouldThrowWhenEmailAlreadyVerified() {
+        existingUser.verified = true;
         CreateUserRequest request = new CreateUserRequest("test@example.com");
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(existingUser));
 
-        assertThrows(EmailAlreadyExistsException.class, () -> userService.createUser(request));
+        assertThrows(AlreadyVerifiedException.class, () -> userService.createUser(request));
+        verify(userRepository, never()).persist(any(User.class));
+    }
+
+    @Test
+    void shouldThrowWhenVerificationPending() {
+        CreateUserRequest request = new CreateUserRequest("test@example.com");
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(existingUser));
+        when(verificationCodeService.hasPendingCode("test@example.com")).thenReturn(true);
+
+        assertThrows(VerificationPendingException.class, () -> userService.createUser(request));
+    }
+
+    @Test
+    void shouldResendCodeWhenNoPendingCode() {
+        CreateUserRequest request = new CreateUserRequest("test@example.com");
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(existingUser));
+        when(verificationCodeService.hasPendingCode("test@example.com")).thenReturn(false);
+        doNothing().when(verificationCodeService).generateAndSend(anyString());
+
+        UserResponse response = userService.createUser(request);
+
+        assertNotNull(response);
+        verify(verificationCodeService).generateAndSend("test@example.com");
         verify(userRepository, never()).persist(any(User.class));
     }
 

@@ -224,4 +224,111 @@ class PasskeyServiceTest {
         assertThrows(PasskeyChallengeExpiredException.class, () -> 
                 passkeyService.finishAuthentication(requestId, responseJson));
     }
+
+    @Test
+    void shouldThrowPasskeyRegistrationExceptionOnJsonProcessingError() throws Exception {
+        when(userRepository.findByIdOptional(user.id)).thenReturn(Optional.of(user));
+        
+        PublicKeyCredentialCreationOptions mockOptions = mock(PublicKeyCredentialCreationOptions.class);
+        when(mockOptions.toJson()).thenThrow(new com.fasterxml.jackson.core.JsonProcessingException("JSON error") {});
+        
+        when(relyingParty.startRegistration(any(StartRegistrationOptions.class)))
+                .thenReturn(mockOptions);
+
+        assertThrows(PasskeyRegistrationException.class, () ->
+                passkeyService.startRegistration(user.id, new PasskeyRegistrationStartRequest("Display Name")));
+    }
+
+    @Test
+    void shouldThrowPasskeyAuthenticationExceptionOnJsonProcessingError() throws Exception {
+        PasskeyAuthStartRequest request = new PasskeyAuthStartRequest("test@example.com");
+        
+        AssertionRequest mockRequest = mock(AssertionRequest.class);
+        when(mockRequest.toCredentialsGetJson()).thenThrow(new com.fasterxml.jackson.core.JsonProcessingException("JSON error") {});
+        
+        when(relyingParty.startAssertion(any())).thenReturn(mockRequest);
+
+        assertThrows(PasskeyAuthenticationException.class, () ->
+                passkeyService.startAuthentication(request));
+    }
+
+    @Test
+    void shouldStartRegistrationWithDisplayName() throws Exception {
+        when(userRepository.findByIdOptional(user.id)).thenReturn(Optional.of(user));
+        
+        String mockJson = "{\"challenge\":\"test-challenge\",\"rp\":{\"name\":\"test\"}}";
+        PublicKeyCredentialCreationOptions mockOptions = mock(PublicKeyCredentialCreationOptions.class);
+        when(mockOptions.toJson()).thenReturn(mockJson);
+        when(mockOptions.toCredentialsCreateJson()).thenReturn(mockJson);
+        
+        when(relyingParty.startRegistration(any(StartRegistrationOptions.class)))
+                .thenReturn(mockOptions);
+
+        String result = passkeyService.startRegistration(user.id, new PasskeyRegistrationStartRequest("Custom Display"));
+
+        assertEquals(mockJson, result);
+        verify(redisService).set(eq("passkey:reg:" + user.id), eq(mockJson), any());
+    }
+
+    @Test
+    void shouldStartRegistrationWithNullDisplayName() throws Exception {
+        when(userRepository.findByIdOptional(user.id)).thenReturn(Optional.of(user));
+        
+        String mockJson = "{\"challenge\":\"test-challenge\",\"rp\":{\"name\":\"test\"}}";
+        PublicKeyCredentialCreationOptions mockOptions = mock(PublicKeyCredentialCreationOptions.class);
+        when(mockOptions.toJson()).thenReturn(mockJson);
+        when(mockOptions.toCredentialsCreateJson()).thenReturn(mockJson);
+        
+        when(relyingParty.startRegistration(any(StartRegistrationOptions.class)))
+                .thenReturn(mockOptions);
+
+        String result = passkeyService.startRegistration(user.id, new PasskeyRegistrationStartRequest(null));
+
+        assertEquals(mockJson, result);
+        verify(redisService).set(eq("passkey:reg:" + user.id), eq(mockJson), any());
+    }
+
+    @Test
+    void shouldStartAuthenticationWithEmptyEmail() {
+        PasskeyAuthStartRequest request = new PasskeyAuthStartRequest("");
+        
+        String mockJson = "{\"challenge\":\"test-challenge\"}";
+        AssertionRequest mockRequest = mock(AssertionRequest.class);
+        try {
+            when(mockRequest.toCredentialsGetJson()).thenReturn(mockJson);
+            when(mockRequest.toJson()).thenReturn(mockJson);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            // Won't happen in mocked scenario
+        }
+        
+        when(relyingParty.startAssertion(any())).thenReturn(mockRequest);
+
+        String result = passkeyService.startAuthentication(request);
+
+        assertNotNull(result);
+        assertTrue(result.contains("requestId"));
+        verify(redisService).set(anyString(), eq(mockJson), any());
+    }
+
+    @Test
+    void shouldStartAuthenticationWithBlankEmail() {
+        PasskeyAuthStartRequest request = new PasskeyAuthStartRequest("   ");
+        
+        String mockJson = "{\"challenge\":\"test-challenge\"}";
+        AssertionRequest mockRequest = mock(AssertionRequest.class);
+        try {
+            when(mockRequest.toCredentialsGetJson()).thenReturn(mockJson);
+            when(mockRequest.toJson()).thenReturn(mockJson);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            // Won't happen in mocked scenario
+        }
+        
+        when(relyingParty.startAssertion(any())).thenReturn(mockRequest);
+
+        String result = passkeyService.startAuthentication(request);
+
+        assertNotNull(result);
+        assertTrue(result.contains("requestId"));
+        verify(redisService).set(anyString(), eq(mockJson), any());
+    }
 }

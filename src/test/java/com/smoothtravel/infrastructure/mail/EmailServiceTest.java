@@ -54,4 +54,24 @@ class EmailServiceTest {
         assertEquals("Welcome", sent.getSubject());
         assertNotNull(sent.getText());
     }
+
+    @Test
+    void shouldHandleHtmlEmailFailure() {
+        when(mailer.send(any(Mail.class))).thenReturn(Uni.createFrom().failure(new RuntimeException("SMTP error")));
+
+        // This should not throw an exception, but handle the failure in the callback
+        emailService.sendHtml("user@example.com", "Welcome", "<h1>Hello</h1>");
+
+        verify(mailer).send(any(Mail.class));
+    }
+
+    @Test
+    void shouldHandleTextEmailFailure() {
+        when(mailer.send(any(Mail.class))).thenReturn(Uni.createFrom().failure(new RuntimeException("SMTP error")));
+
+        // This should not throw an exception, but handle the failure in the callback
+        emailService.sendText("user@example.com", "Welcome", "Hello");
+
+        verify(mailer).send(any(Mail.class));
+    }
 }

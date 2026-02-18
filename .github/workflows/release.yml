@@ -1,0 +1,122 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # create GitHub releases and upload assets
+  packages: write   # push Docker image to GHCR
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      # Strip the leading 'v' from the tag (v1.0.0 → 1.0.0)
+      - name: Extract version
+        id: vars
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      # ── Tests ────────────────────────────────────────────────────────────
+      - name: Run tests
+        run: ./mvnw verify --no-transfer-progress
+
+      # ── Uber-JAR ─────────────────────────────────────────────────────────
+      # Quarkus fast-jar (used by Docker) is a directory, not a single file.
+      # We build a self-contained uber-jar specifically for the release asset.
+      - name: Build uber-jar
+        run: ./mvnw package -DskipTests --no-transfer-progress -Dquarkus.package.jar.type=uber-jar
+
+      - name: Rename uber-jar
+        run: |
+          mv target/smooth-travel-backend-*-runner.jar \
+             target/smooth-travel-backend-${{ github.ref_name }}.jar
+
+      # ── Source archive ────────────────────────────────────────────────────
+      - name: Create source archive
+        run: |
+          git archive \
+            --format=zip \
+            --prefix=smooth-travel-backend-${{ github.ref_name }}/ \
+            HEAD \
+            -o target/smooth-travel-backend-${{ github.ref_name }}-sources.zip
+
+      # ── Docker image → GHCR ───────────────────────────────────────────────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.vars.outputs.VERSION }}
+            ${{ env.IMAGE }}:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.vars.outputs.VERSION }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          # Reuse Docker layer cache across runs to speed up the Maven build inside Docker
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ── GitHub Release ────────────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            target/smooth-travel-backend-${{ github.ref_name }}.jar
+            target/smooth-travel-backend-${{ github.ref_name }}-sources.zip
+          body: |
+            ## Docker image
+
+            ```bash
+            docker pull ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.VERSION }}
+            ```
+
+            Run with required environment variables:
+
+            ```bash
+            docker run -p 8080:8080 \
+              -e POSTGRES_HOST=<host> \
+              -e POSTGRES_DB=<db> \
+              -e POSTGRES_USER=<user> \
+              -e POSTGRES_PASSWORD=<password> \
+              -e REDIS_HOST=<host> \
+              -e SMTP_HOST=<host> \
+              -e SMTP_USERNAME=<username> \
+              -e SMTP_PASSWORD=<password> \
+              -e SMTP_FROM=<from> \
+              -e JWT_PUBLIC_KEY_LOCATION=<path> \
+              -e JWT_PRIVATE_KEY_LOCATION=<path> \
+              -e WEBAUTHN_RP_ID=<domain> \
+              -e WEBAUTHN_ORIGIN=<https://your-frontend.com> \
+              -e CORS_ORIGINS=<https://your-frontend.com> \
+              ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.VERSION }}
+            ```

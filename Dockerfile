@@ -7,7 +7,10 @@ RUN microdnf install -y gzip && microdnf clean all
 
 COPY pom.xml mvnw ./
 COPY .mvn .mvn
-RUN ./mvnw dependency:go-offline -q
+# dependency:go-offline fails on SNAPSHOT transitive deps not managed by the Quarkus BOM.
+# Running package instead lets the BOM resolve versions correctly; target is removed
+# so this layer only serves as a dependency cache.
+RUN ./mvnw -B package -DskipTests -q && rm -rf target
 
 COPY src src
 RUN ./mvnw package -DskipTests -q
